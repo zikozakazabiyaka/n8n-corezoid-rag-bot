@@ -1,0 +1,193 @@
+{
+  "name": "bot_telegram",
+  "nodes": [
+    {
+      "parameters": {
+        "updates": [
+          "message"
+        ],
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegramTrigger",
+      "typeVersion": 1.5,
+      "position": [
+        0,
+        0
+      ],
+      "id": "008b7621-eeed-4f32-893f-c4c6cb326250",
+      "name": "Telegram Trigger"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "={{ $json.message.text }}",
+        "options": {
+          "systemMessage": "Ты ментор по n8n для разработчика, который хорошо знает Corezoid. Объясняй через аналогии с Корезоидом, отвечай коротко и по-русски.\nОтвечай только на вопросы про n8n и Corezoid. На остальные вежливо скажи, что помогаешь только по этим темам.\n\nПро Corezoid отвечай ТОЛЬКО на основе результатов инструмента corezoid_docs.\nНазывай только те поля, функции и параметры, которые дословно есть в найденных фрагментах. Не придумывай и не достраивай списки.\nЕсли фрагмент обрывается или нужной информации нет, сделай ещё один поиск с другой формулировкой (до 3 поисков), а если и тогда нет, так и скажи.\n\nПравила поискового запроса: в запросе всегда пиши полное название ноды и тип искомого сведения, например \"Call a Process node logic type api_rpc fields\". Для type, имён параметров и идентификаторов делай отдельный поиск по названию ноды и сверяй значение дословно по найденному тексту. Не путай похожие ноды: Call a Process (api_rpc), Copy Task и Modify Task (api_copy).\nЕсли найденные фрагменты относятся к другой ноде, чем в вопросе, игнорируй их и ищи заново.\n\nВ конце укажи источники: только те имена файлов, из которых ты реально взял информацию в найденных фрагментах.\n\nФормат ответа: простой текст без Markdown, без символов #, *, ` и без таблиц. Ответ не длиннее 1500 символов."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 3.1,
+      "position": [
+        224,
+        0
+      ],
+      "id": "88f6197c-b03f-4121-95e6-e071d2d2840d",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        224,
+        160
+      ],
+      "id": "97ee035c-f9c2-463a-a7ed-b36a51fec989",
+      "name": "Google Gemini Chat Model"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Telegram Trigger').item.json.message.chat.id }}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.4,
+      "position": [
+        320,
+        160
+      ],
+      "id": "7fef2972-6ac6-48e8-a627-7b31da67d957",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "chatId": "={{ $('Telegram Trigger').item.json.message.chat.id }}",
+        "text": "={{ $json.output.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;') }}",
+        "additionalFields": {
+          "appendAttribution": false,
+          "parse_mode": "HTML"
+        }
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        0
+      ],
+      "id": "a49046b6-8e7a-4d8f-8a17-43d91d9d9234",
+      "name": "Send a text message"
+    },
+    {
+      "parameters": {
+        "mode": "retrieve-as-tool",
+        "toolDescription": "Документация Corezoid: типы нод, структура процессов, переменные, ошибки. Используй для любых вопросов про Corezoid.",
+        "memoryKey": {
+          "__rl": true,
+          "value": "corezoid_docs_v2",
+          "mode": "list",
+          "cachedResultName": "corezoid_docs_v2"
+        },
+        "topK": 5
+      },
+      "type": "@n8n/n8n-nodes-langchain.vectorStoreInMemory",
+      "typeVersion": 1.3,
+      "position": [
+        288,
+        288
+      ],
+      "id": "bec32fbf-cdbd-4d6e-bc67-4a04d1f388d7",
+      "name": "Simple Vector Store"
+    },
+    {
+      "parameters": {},
+      "type": "@n8n/n8n-nodes-langchain.embeddingsGoogleGemini",
+      "typeVersion": 1,
+      "position": [
+        288,
+        416
+      ],
+      "id": "08ee94ff-2068-487c-8bd5-321c223094dd",
+      "name": "Embeddings Google Gemini"
+    }
+  ],
+  "connections": {
+    "Telegram Trigger": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Vector Store": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Embeddings Google Gemini": {
+      "ai_embedding": [
+        [
+          {
+            "node": "Simple Vector Store",
+            "type": "ai_embedding",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  },
+  "nodeGroups": [],
+  "tags": []
+}
