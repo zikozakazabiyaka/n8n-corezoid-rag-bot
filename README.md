@@ -87,7 +87,7 @@ The vector store is in memory: restarting the n8n container requires running the
 
 ## Evaluation
 
-A fixed question set with a reference answer for each (expected source file, expected facts, known trap). Each answer was checked for: correct source in the retrieved chunks, expected facts present, hallucinations.
+A fixed question set with a reference answer for each (expected source file, expected facts, known trap). Each answer was checked for: correct source in the retrieved chunks, expected facts present, hallucinations. The full set with references is in [docs/evaluation.md](docs/evaluation.md).
 
 **Main set (6 questions)**
 
@@ -165,7 +165,7 @@ workflows/
 docs/
   architecture-bot.png          # query workflow screenshot
   architecture-ingest.png       # ingestion workflow screenshot
-  evaluation.md                 # full question set with reference answers (optional)
+  evaluation.md                 # full question set with reference answers and results
 README.md
 ```
 
